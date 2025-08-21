@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 type Source struct {
 	Logo            uint8
 	Position        uint8
@@ -22,7 +21,6 @@ type Source struct {
 	CopyrightOffset uint32
 }
 
-
 func (n *News) GetNewsArticles() {
 	n.newsSource = endi.NewEndi(n.oldArticleTitles)
 	var err error
@@ -32,7 +30,7 @@ func (n *News) GetNewsArticles() {
 	}
 
 	// Save articles to file for inspection (Debug)
-	n.debugSaveArticles()
+	// n.debugSaveArticles()
 }
 
 func (n *News) MakeSourceTable() {
