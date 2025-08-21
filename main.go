@@ -1,7 +1,7 @@
 package main
 
 import (
-	"NewsChannel/news"
+	"WiiNewsPR/news"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -32,7 +32,7 @@ type News struct {
 	ImagesData      []byte
 	CaptionData     []uint16
 
-	source news.Source
+	newsSource news.Source
 
 	currentLanguageCode uint8
 	currentCountryCode  uint8
@@ -44,8 +44,6 @@ type News struct {
 	// Placeholder for the timestamps for a specific topic.
 	timestamps [][]Timestamp
 
-	// Placeholder for locations. Used in order to collect all the used locations without duplicates.
-	locations []*news.Location
 
 	articles []news.Article
 
@@ -56,60 +54,48 @@ type News struct {
 var currentTime = 0
 
 func main() {
-	// Load configuration from JSON file instead of having random numbers (added Spain btw)
-	config, err := LoadConfig("countries.json")
+	n := News{}
+	n.currentCountryCode = 49 // USA
+	n.currentLanguageCode = 1 // English
+
+	t := time.Now()
+	currentTime = int(t.Unix())
+	n.currentHour = t.Hour()
+
+	buffer := new(bytes.Buffer)
+	n.ReadNewsCache()
+	n.GetNewsArticles()
+	n.MakeHeader()
+	n.MakeWiiMenuHeadlines()
+	n.MakeArticleTable()
+	n.MakeTopicTable()
+	n.MakeSourceTable()
+	n.WriteNewsCache()
+	n.MakeLocationTable()
+	n.WriteImages()
+	n.Header.Filesize = n.GetCurrentSize()
+	n.WriteAll(buffer)
+
+	crcTable := crc32.MakeTable(crc32.IEEE)
+	checksum := crc32.Checksum(buffer.Bytes()[12:], crcTable)
+	n.Header.CRC32 = checksum
+
+	buffer.Reset()
+	n.WriteAll(buffer)
+
+	compressed, err := lz10.Compress(buffer.Bytes())
 	checkError(err)
 
-	// Process each country/language combination
-	for _, countryConfig := range config.Countries {
-		n := News{}
-		n.currentCountryCode = countryConfig.CountryCode
-		n.currentLanguageCode = countryConfig.LanguageCode
-
-		log.Printf("Processing %s (%s) - Country: %d, Language: %d",
-			countryConfig.Name, countryConfig.Language,
-			countryConfig.CountryCode, countryConfig.LanguageCode)
-
-		t := time.Now()
-		currentTime = int(t.Unix())
-		n.currentHour = t.Hour()
-
-		buffer := new(bytes.Buffer)
-		n.ReadNewsCache()
-		n.setSource(countryConfig.Source)
-		n.GetNewsArticles()
-		n.MakeHeader()
-		n.MakeWiiMenuHeadlines()
-		n.MakeArticleTable()
-		n.MakeTopicTable()
-		n.MakeSourceTable()
-		n.WriteNewsCache()
-		n.MakeLocationTable()
-		n.WriteImages()
-		n.Header.Filesize = n.GetCurrentSize()
-		n.WriteAll(buffer)
-
-		crcTable := crc32.MakeTable(crc32.IEEE)
-		checksum := crc32.Checksum(buffer.Bytes()[12:], crcTable)
-		n.Header.CRC32 = checksum
-
-		buffer.Reset()
-		n.WriteAll(buffer)
-
-		compressed, err := lz10.Compress(buffer.Bytes())
+	// If the folder exists we can just continue
+	err = os.MkdirAll(fmt.Sprintf("./v2/%d/%03d", n.currentLanguageCode, n.currentCountryCode), os.ModePerm)
+	if !os.IsExist(err) {
 		checkError(err)
-
-		// If the folder exists we can just continue
-		err = os.MkdirAll(fmt.Sprintf("./v2/%d/%03d", n.currentLanguageCode, n.currentCountryCode), os.ModePerm)
-		if !os.IsExist(err) {
-			checkError(err)
-		}
-
-		err = os.WriteFile(fmt.Sprintf("./v2/%d/%03d/news.bin.%02d", n.currentLanguageCode, n.currentCountryCode, n.currentHour), SignFile(compressed), 0666)
-		checkError(err)
-
-		log.Printf("Successfully generated news file for %s (%s)", countryConfig.Name, countryConfig.Language)
 	}
+
+	err = os.WriteFile(fmt.Sprintf("./v2/%d/%03d/news.bin.%02d", n.currentLanguageCode, n.currentCountryCode, n.currentHour), SignFile(compressed), 0666)
+	checkError(err)
+
+	log.Printf("Successfully generated news file for %d/%03d at hour %02d\n", n.currentLanguageCode, n.currentCountryCode, n.currentHour)
 }
 
 func checkError(err error) {

@@ -18,7 +18,7 @@ type Location struct {
 	Name      string
 }
 
-// San Juan location constants used specifically for PR news
+// San Juan coordinates
 const (
 	SanJuanName      = "San Juan"
 	SanJuanLatitude  = 18.466333

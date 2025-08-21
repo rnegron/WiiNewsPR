@@ -16,20 +16,17 @@ type Location struct {
 	_            [3]byte
 }
 
-// FORK UPDATE: Removed floatCompare function - no longer needed with hardcoded location
 
 func CoordinateEncode(value float64) int16 {
 	value /= 0.0054931640625
 	return int16(value)
 }
 
-// FORK UPDATE: Use San Juan constants from news package
 
 func (n *News) MakeLocationTable() {
 	n.Header.LocationTableOffset = n.GetCurrentSize()
 
-	// FORK UPDATE: Use San Juan constants from news package
-	n.Locations = append(n.Locations, Location{
+		n.Locations = append(n.Locations, Location{
 		TextOffset:   0,
 		Latitude:     CoordinateEncode(news.SanJuanLatitude),
 		Longitude:    CoordinateEncode(news.SanJuanLongitude),

@@ -11,7 +11,6 @@ import (
 	"os"
 )
 
-// FORK UPDATE: Removed LoadConfig and related types
 
 // fixTime adjusts the timestamp to coincide with the Wii's UTC timestamp.
 func fixTime(value int) uint32 {
