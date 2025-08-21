@@ -5,17 +5,17 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"image/jpeg"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/pmezard/go-difflib/difflib"
 	"golang.org/x/image/draw"
 
 	"image"
-	_ "image/jpeg"
+	"image/jpeg"
 	_ "image/png"
 )
 
@@ -53,6 +53,39 @@ func IsDuplicateArticle(previousArticles []string, currentArticle string) bool {
 	}
 
 	return false
+}
+
+func DownloadImage(imageURL string) ([]byte, error) {
+	if imageURL == "" {
+		return nil, fmt.Errorf("empty image URL")
+	}
+
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+	}
+
+	resp, err := client.Get(imageURL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to download image: status %d", resp.StatusCode)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Limit image size
+	const maxImageSize = 500 * 1024 // 500KB
+	if len(data) > maxImageSize {
+		return nil, fmt.Errorf("image too large: %d bytes", len(data))
+	}
+
+	return data, nil
 }
 
 func ConvertImage(data []byte) []byte {
