@@ -47,7 +47,7 @@ func (n *News) ReadNewsCache() {
 		}
 
 		var _articles []NewsCache
-		data, err := os.ReadFile(fmt.Sprintf("./cache/cache_%d_%d_%d.news", i, n.currentCountryCode, n.currentLanguageCode))
+		data, err := os.ReadFile(fmt.Sprintf("./cache/cache_%d.news", i))
 		if err != nil {
 			continue
 		}
@@ -109,7 +109,6 @@ func (n *News) WriteNewsCache() {
 	data, err := json.Marshal(cache)
 	checkError(err)
 
-	// Now write file
-	err = os.WriteFile(fmt.Sprintf("./cache/cache_%d_%d_%d.news", n.currentHour, n.currentCountryCode, n.currentLanguageCode), data, 0666)
+	err = os.WriteFile(fmt.Sprintf("./cache/cache_%d.news", n.currentHour), data, 0666)
 	checkError(err)
 }

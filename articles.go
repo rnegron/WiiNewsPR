@@ -35,24 +35,8 @@ func (n *News) MakeArticleTable() {
 	for i, article := range n.articles {
 		publishedTime := currentTime
 
-		// Parse the location if any.
-		locationIndex := uint32(math.MaxUint32)
-		if article.Location != nil {
-			for i, location := range n.locations {
-				if floatCompare(location.Latitude, article.Location.Latitude) && floatCompare(location.Longitude, article.Location.Longitude) {
-					locationIndex = uint32(i)
-					break
-				}
-			}
-
-			// If no existing location was found but the article contains a location, determine if we need to make an API call.
-			if locationIndex == uint32(math.MaxUint32) && article.Location.Latitude != 0 {
-				locationIndex = uint32(len(n.locations))
-				n.locations = append(n.locations, article.Location)
-			} else if locationIndex == uint32(math.MaxUint32) && article.Location.Name != "" {
-				// TODO: API Call for location
-			}
-		}
+		// FORK UPDATE: Always use San Juan location (index 0)
+		locationIndex := uint32(0)
 
 		n.Articles = append(n.Articles, Article{
 			ID:                uint32(i + 1),
@@ -143,7 +127,8 @@ func (n *News) WriteImages() {
 
 	i = 0
 	for _, article := range n.articles {
-		if article.Thumbnail.Caption == "" {
+		// FORK UPDATE: Checking for nil pointer
+		if article.Thumbnail == nil || article.Thumbnail.Caption == "" {
 			continue
 		}
 

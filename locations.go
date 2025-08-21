@@ -22,14 +22,21 @@ func CoordinateEncode(value float64) int16 {
 	return int16(value)
 }
 
+// FORK UPDATE: Constants for San Juan location
+const (
+	SanJuanName      = "San Juan"
+	SanJuanLatitude  = 18.466333
+	SanJuanLongitude = -66.105721
+)
+
 func (n *News) MakeLocationTable() {
 	n.Header.LocationTableOffset = n.GetCurrentSize()
 
-	// FORK UPDATE: Hardcode San Juan, PR location
+	// FORK UPDATE: Use San Juan constants
 	n.Locations = append(n.Locations, Location{
 		TextOffset:   0,
-		Latitude:     CoordinateEncode(18.466333),  // San Juan latitude
-		Longitude:    CoordinateEncode(-66.105721), // San Juan longitude
+		Latitude:     CoordinateEncode(SanJuanLatitude),
+		Longitude:    CoordinateEncode(SanJuanLongitude),
 		CountryCode:  0,
 		RegionCode:   0,
 		LocationCode: 0,
