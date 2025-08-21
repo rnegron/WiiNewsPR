@@ -18,6 +18,13 @@ type Location struct {
 	Name      string
 }
 
+// San Juan location constants used specifically for PR news
+const (
+	SanJuanName      = "San Juan"
+	SanJuanLatitude  = 18.466333
+	SanJuanLongitude = -66.105721
+)
+
 // NominatimResponse represents the structure of OpenStreetMap Nominatim API response
 type NominatimResponse struct {
 	PlaceID     int      `json:"place_id"`

@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-const (
-	SanJuanLatitude  = 18.466333
-	SanJuanLongitude = -66.105721
-)
-
 const MaxArticles = 15
 const MaxArticlesPerCategory = 3
 
@@ -155,9 +150,9 @@ func (e *Endi) createArticleFromItem(item Item, topic news.Topic, title string) 
 		Title: title,
 		Topic: topic,
 		Location: &news.Location{
-			Name:      "San Juan",
-			Latitude:  SanJuanLatitude,
-			Longitude: SanJuanLongitude,
+			Name:      news.SanJuanName,
+			Latitude:  news.SanJuanLatitude,
+			Longitude: news.SanJuanLongitude,
 		},
 	}
 

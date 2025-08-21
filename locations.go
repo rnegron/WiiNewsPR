@@ -1,6 +1,7 @@
 package main
 
 import (
+	"WiiNewsPR/news"
 	"unicode/utf16"
 )
 
@@ -22,21 +23,16 @@ func CoordinateEncode(value float64) int16 {
 	return int16(value)
 }
 
-// FORK UPDATE: Constants for San Juan location
-const (
-	SanJuanName      = "San Juan"
-	SanJuanLatitude  = 18.466333
-	SanJuanLongitude = -66.105721
-)
+// FORK UPDATE: Use San Juan constants from news package
 
 func (n *News) MakeLocationTable() {
 	n.Header.LocationTableOffset = n.GetCurrentSize()
 
-	// FORK UPDATE: Use San Juan constants
+	// FORK UPDATE: Use San Juan constants from news package
 	n.Locations = append(n.Locations, Location{
 		TextOffset:   0,
-		Latitude:     CoordinateEncode(SanJuanLatitude),
-		Longitude:    CoordinateEncode(SanJuanLongitude),
+		Latitude:     CoordinateEncode(news.SanJuanLatitude),
+		Longitude:    CoordinateEncode(news.SanJuanLongitude),
 		CountryCode:  0,
 		RegionCode:   0,
 		LocationCode: 0,
@@ -45,7 +41,7 @@ func (n *News) MakeLocationTable() {
 
 	// Set text offset and add location name
 	n.Locations[0].TextOffset = n.GetCurrentSize()
-	encoded := utf16.Encode([]rune("San Juan"))
+	encoded := utf16.Encode([]rune(news.SanJuanName))
 	n.LocationText = append(n.LocationText, encoded...)
 	n.LocationText = append(n.LocationText, 0)
 	for n.GetCurrentSize()%4 != 0 {
