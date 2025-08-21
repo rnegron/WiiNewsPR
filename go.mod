@@ -1,4 +1,4 @@
-module NewsChannel
+module WiiNewsPR
 
 go 1.22
 

@@ -3,17 +3,16 @@ package news
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"html"
 	"image/jpeg"
-	"regexp"
-	"strings"
-	"fmt"
 	"io"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/pmezard/go-difflib/difflib"
 	"golang.org/x/image/draw"
-	"github.com/PuerkitoBio/goquery"
 
 	"image"
 	_ "image/jpeg"
@@ -21,28 +20,28 @@ import (
 )
 
 func HttpGet(url string, userAgent ...string) ([]byte, error) {
-    client := &http.Client{}
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-        return nil, err
-    }
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
 
-    if len(userAgent) > 0 && userAgent[0] != "" {
-        req.Header.Set("User-Agent", userAgent[0])
-    }
+	if len(userAgent) > 0 && userAgent[0] != "" {
+		req.Header.Set("User-Agent", userAgent[0])
+	}
 
-    resp, err := client.Do(req)
-    if err != nil || resp.StatusCode != http.StatusOK {
-        return nil, fmt.Errorf("HTTP request failed: %v", err)
-    }
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP request failed: %v", err)
+	}
 
-    defer resp.Body.Close()
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, err
-    }
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
-    return body, nil
+	return body, nil
 }
 
 func IsDuplicateArticle(previousArticles []string, currentArticle string) bool {
@@ -96,7 +95,7 @@ func CleanHTMLEntities(content string) string {
 
 	mediaRegex := regexp.MustCompile(`@@MEDIA\[[^\]]*\]`)
 	content = mediaRegex.ReplaceAllString(content, "")
-	
+
 	replacements := map[string]string{
 		"&nbsp;":   " ",
 		"&lt;":     "<",
@@ -125,29 +124,4 @@ func CleanHTMLEntities(content string) string {
 	}
 
 	return strings.TrimSpace(content)
-}
-
-func ExtractImageCaption(articleURL string, find string) string {
-    if articleURL == "" {
-        return ""
-    }
-
-    data, err := HttpGet(articleURL)
-    if err != nil {
-        return ""
-    }
-
-    doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(data)))
-    if err != nil {
-        return ""
-    }
-
-    caption := doc.Find(find).Text()
-    if caption != "" {
-        caption = strings.ReplaceAll(caption, "Quelle:", "")
-        caption = strings.TrimSpace(caption)
-        return caption
-    }
-
-    return ""
 }

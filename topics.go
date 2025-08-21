@@ -1,12 +1,15 @@
 package main
 
 import (
-	"NewsChannel/news"
+	"WiiNewsPR/news"
 	"encoding/json"
 	"fmt"
 	"os"
 	"unicode/utf16"
 )
+
+// FORK UPDATE: Since we only support English, we can hardcode the topics and their text here
+var topics = []string{"National News", "International News", "Sports", "Entertainment", "Business", "Science", "Technology"}
 
 type Topic struct {
 	TextOffset           uint32
@@ -32,7 +35,6 @@ type NewsCache struct {
 // This is quite an annoying job as for some reason it needs to make the timestamp table for every single article, even ones
 // from past hours. Due to this we are required to cache what articles we used.
 func (n *News) ReadNewsCache() {
-	topics := n.GetTopicsForLanguage()
 	topicsLength := len(topics) + 1
 
 	n.topics = make([]Topic, topicsLength)
@@ -69,7 +71,6 @@ func (n *News) MakeTopicTable() {
 	n.Header.TopicTableOffset = n.GetCurrentSize()
 	n.Topics = n.topics
 
-	topics := n.GetTopicsForLanguage()
 	topicsLength := len(topics) + 1
 	n.Header.NumberOfTopics = uint32(topicsLength)
 
@@ -89,6 +90,10 @@ func (n *News) MakeTopicTable() {
 
 // WriteNewsCache writes the found articles for the current hour.
 func (n *News) WriteNewsCache() {
+	// FORK UPDATE: create cache directory if it doesn't exist
+	err := os.MkdirAll("./cache", os.ModePerm)
+	checkError(err)
+
 	// Order everything into the NewsCache struct
 	var cache []NewsCache
 	for i, article := range n.articles {
