@@ -3,6 +3,7 @@ package main
 import (
 	"WiiNewsPR/news/endi"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -81,6 +82,7 @@ func (n *News) debugSaveArticles() {
 		HasImage     bool   `json:"hasImage"`
 		ImageSize    int    `json:"imageSize"`
 		ImageCaption string `json:"imageCaption"`
+		ImageBase64  string `json:"imageBase64,omitempty"`
 	}
 
 	var debugArticles []DebugArticle
@@ -111,10 +113,14 @@ func (n *News) debugSaveArticles() {
 		var hasImage bool
 		var imageSize int
 		var imageCaption string
+		var imageBase64 string
 		if article.Thumbnail != nil {
 			hasImage = true
 			imageSize = len(article.Thumbnail.Image)
 			imageCaption = article.Thumbnail.Caption
+			if len(article.Thumbnail.Image) > 0 {
+				imageBase64 = base64.StdEncoding.EncodeToString(article.Thumbnail.Image)
+			}
 		}
 
 		debugArticles = append(debugArticles, DebugArticle{
@@ -125,6 +131,7 @@ func (n *News) debugSaveArticles() {
 			HasImage:     hasImage,
 			ImageSize:    imageSize,
 			ImageCaption: imageCaption,
+			ImageBase64:  imageBase64,
 		})
 	}
 

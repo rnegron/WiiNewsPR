@@ -92,11 +92,18 @@ func (n *News) MakeArticleTable() {
 
 func (n *News) WriteImages() {
 	n.Header.ImagesTableOffset = n.GetCurrentSize()
-	for _, article := range n.articles {
-		if article.Thumbnail == nil || len(article.Thumbnail.Image) == 0 {
-			continue
-		}
 
+	// First, create a consistent list of articles with valid images
+	var articlesWithImages []int // Store indices of articles that have valid images
+	for i, article := range n.articles {
+		if article.Thumbnail != nil && len(article.Thumbnail.Image) > 0 {
+			articlesWithImages = append(articlesWithImages, i)
+		}
+	}
+
+	// Create Image structs for articles with valid images
+	for _, articleIndex := range articlesWithImages {
+		article := n.articles[articleIndex]
 		n.Images = append(n.Images, Image{
 			CreditSize:    0,
 			CreditOffset:  0,
@@ -107,42 +114,34 @@ func (n *News) WriteImages() {
 		})
 	}
 
-	i := 0
-	for _, article := range n.articles {
-		if article.Thumbnail == nil || len(article.Thumbnail.Image) == 0 {
-			continue
-		}
+	for imageIndex, articleIndex := range articlesWithImages {
+		article := n.articles[articleIndex]
 
-		n.Images[i].PictureOffset = n.GetCurrentSize()
+		n.Images[imageIndex].PictureOffset = n.GetCurrentSize()
 		n.ImagesData = append(n.ImagesData, article.Thumbnail.Image...)
 		for n.GetCurrentSize()%4 != 0 {
 			n.ImagesData = append(n.ImagesData, 0)
 		}
 
-		// Fix up the article
-		n.Articles[i].PictureIndex = uint32(i)
-		n.Articles[i].PictureTimestamp = fixTime(currentTime)
-		i++
+		n.Articles[articleIndex].PictureIndex = uint32(imageIndex)
+		n.Articles[articleIndex].PictureTimestamp = fixTime(currentTime)
 	}
 
-	i = 0
-	for _, article := range n.articles {
-		// FORK UPDATE: Checking for nil pointer
-		if article.Thumbnail == nil || article.Thumbnail.Caption == "" {
-			continue
+	for imageIndex, articleIndex := range articlesWithImages {
+		article := n.articles[articleIndex]
+
+		// Only process caption if it exists
+		if article.Thumbnail.Caption != "" {
+			caption := utf16.Encode([]rune(article.Thumbnail.Caption))
+			n.Images[imageIndex].CaptionOffset = n.GetCurrentSize()
+			n.Images[imageIndex].CaptionSize = uint32(len(caption) / 2)
+			n.CaptionData = append(n.CaptionData, caption...)
+			n.CaptionData = append(n.CaptionData, 0)
+
+			for n.GetCurrentSize()%4 != 0 {
+				n.CaptionData = append(n.CaptionData, uint16(0))
+			}
 		}
-
-		caption := utf16.Encode([]rune(article.Thumbnail.Caption))
-		n.Images[i].CaptionOffset = n.GetCurrentSize()
-		n.Images[i].CaptionSize = uint32(len(caption) / 2)
-		n.CaptionData = append(n.CaptionData, caption...)
-		n.CaptionData = append(n.CaptionData, 0)
-
-		for n.GetCurrentSize()%4 != 0 {
-			n.CaptionData = append(n.CaptionData, uint16(0))
-		}
-
-		i++
 	}
 
 	n.Header.NumberOfImages = uint32(len(n.Images))
