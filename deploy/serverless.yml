@@ -19,7 +19,7 @@ functions:
   generateNewsBinary:
     handler: bootstrap
     timeout: 30
-    memorySize: 256
+    memorySize: 1536
     events:
       - schedule:
           rate: cron(30 * * * ? *)
