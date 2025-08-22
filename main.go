@@ -4,11 +4,13 @@ import (
 	"WiiNewsPR/news"
 	"bytes"
 	"encoding/binary"
+	"flag"
 	"fmt"
 	"hash/crc32"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/wii-tools/lzx/lz10"
@@ -44,7 +46,6 @@ type News struct {
 	// Placeholder for the timestamps for a specific topic.
 	timestamps [][]Timestamp
 
-
 	articles []news.Article
 
 	// Placeholder for the topics.
@@ -54,6 +55,10 @@ type News struct {
 var currentTime = 0
 
 func main() {
+	outputDir := flag.String("o", ".", "Output directory for generated files (default: . [current directory])")
+	cacheDir := flag.String("c", "./cache", "Cache directory for articles generated previously (default: ./cache)")
+	flag.Parse()
+
 	n := News{}
 	n.currentCountryCode = 49 // USA
 	n.currentLanguageCode = 1 // English
@@ -63,14 +68,14 @@ func main() {
 	n.currentHour = t.Hour()
 
 	buffer := new(bytes.Buffer)
-	n.ReadNewsCache()
+	n.ReadNewsCache(*cacheDir)
 	n.GetNewsArticles()
 	n.MakeHeader()
 	n.MakeWiiMenuHeadlines()
 	n.MakeArticleTable()
 	n.MakeTopicTable()
 	n.MakeSourceTable()
-	n.WriteNewsCache()
+	n.WriteNewsCache(*cacheDir)
 	n.MakeLocationTable()
 	n.WriteImages()
 	n.Header.Filesize = n.GetCurrentSize()
@@ -87,12 +92,14 @@ func main() {
 	checkError(err)
 
 	// If the folder exists we can just continue
-	err = os.MkdirAll(fmt.Sprintf("./v2/%d/%03d", n.currentLanguageCode, n.currentCountryCode), os.ModePerm)
+	outputPath := filepath.Join(*outputDir, fmt.Sprintf("v2/%d/%03d", n.currentLanguageCode, n.currentCountryCode))
+	err = os.MkdirAll(outputPath, os.ModePerm)
 	if !os.IsExist(err) {
 		checkError(err)
 	}
 
-	err = os.WriteFile(fmt.Sprintf("./v2/%d/%03d/news.bin.%02d", n.currentLanguageCode, n.currentCountryCode, n.currentHour), SignFile(compressed), 0666)
+	outputFile := filepath.Join(outputPath, fmt.Sprintf("news.bin.%02d", n.currentHour))
+	err = os.WriteFile(outputFile, SignFile(compressed), 0666)
 	checkError(err)
 
 	log.Printf("Successfully generated news file for %d/%03d at hour %02d\n", n.currentLanguageCode, n.currentCountryCode, n.currentHour)

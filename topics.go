@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"unicode/utf16"
 )
 
@@ -34,7 +35,7 @@ type NewsCache struct {
 // ReadNewsCache creates the topic table as well as the timestamp table for articles.
 // This is quite an annoying job as for some reason it needs to make the timestamp table for every single article, even ones
 // from past hours. Due to this we are required to cache what articles we used.
-func (n *News) ReadNewsCache() {
+func (n *News) ReadNewsCache(cacheDir string) {
 	topicsLength := len(topics) + 1
 
 	n.topics = make([]Topic, topicsLength)
@@ -47,7 +48,8 @@ func (n *News) ReadNewsCache() {
 		}
 
 		var _articles []NewsCache
-		data, err := os.ReadFile(fmt.Sprintf("./cache/cache_%d.news", i))
+		inputFile := filepath.Join(cacheDir, fmt.Sprintf("cache_%d.news", i))
+		data, err := os.ReadFile(inputFile)
 		if err != nil {
 			continue
 		}
@@ -89,9 +91,9 @@ func (n *News) MakeTopicTable() {
 }
 
 // WriteNewsCache writes the found articles for the current hour.
-func (n *News) WriteNewsCache() {
+func (n *News) WriteNewsCache(cacheDir string) {
 	// FORK UPDATE: create cache directory if it doesn't exist
-	err := os.MkdirAll("./cache", os.ModePerm)
+	err := os.MkdirAll(cacheDir, os.ModePerm)
 	checkError(err)
 
 	// Order everything into the NewsCache struct
@@ -109,6 +111,7 @@ func (n *News) WriteNewsCache() {
 	data, err := json.Marshal(cache)
 	checkError(err)
 
-	err = os.WriteFile(fmt.Sprintf("./cache/cache_%d.news", n.currentHour), data, 0666)
+	outputFile := filepath.Join(cacheDir, fmt.Sprintf("cache_%d.news", n.currentHour))
+	err = os.WriteFile(outputFile, data, 0666)
 	checkError(err)
 }
