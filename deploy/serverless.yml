@@ -1,0 +1,33 @@
+service: wiinewspr-generator
+
+provider:
+  name: aws
+  runtime: provided.al2
+  region: us-east-1
+  environment:
+    S3_BUCKET: wii.rauln.com
+    S3_PREFIX: news/1/049/
+    TZ: America/Puerto_Rico  # Important! We need the Lambda to generate correct "currentHour"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource: "arn:aws:s3:::wii.rauln.com/news/*"
+
+functions:
+  generateNewsBinary:
+    handler: bootstrap
+    timeout: 30
+    memorySize: 256
+    events:
+      - schedule:
+          rate: cron(30 * * * ? *)
+          name: wiinewspr-every-30min
+          description: Generate Wii News PR binary file every hour at 30 minutes past
+
+package:
+  patterns:
+    - bootstrap
+    - WiiNewsPR
+    - ../Private.pem
